@@ -129,16 +129,19 @@ flowchart TD
 ```
 
 11. List every difference and every cycle that you found, using the table below, and state for each one whether you would fix the design or the code, with one reason. If you found no difference, state that.
-
+```
 | What you found | Where | What you would fix |
 | :--- | :--- | :--- |
 | An arrow in the code that the diagram does not show | `ocs.cli -> ocs.domain` | **Fix the design**: Add this dependency to the package diagram because CLI classes genuinely need to construct and display domain value types (such as `TargetCoordinates` and `InstrumentSettings`) when interacting with the user. |
 | An arrow in the code that the diagram does not show | `ocs.cli -> ocs.port` | **Fix the design**: Add this dependency to the package diagram because `OcsMain` (the composition root in `ocs.cli`) wires concrete implementations to port interfaces when injecting dependencies into application services. |
 | An arrow in the code that the diagram does not show | `ocs.domain -> ocs.port` | **Fix the code**: Remove the dependency on `ocs.port` from `ocs.domain` so that domain entities remain pure and independent of external port interfaces, which also resolves the package cycle. |
 | A cycle between packages | `ocs.domain <-> ocs.port` | **Fix the code**: Break the cycle by keeping `ocs.port -> ocs.domain` (so port interfaces can use domain types in their signatures) and moving any port calls out of `ocs.domain` into `ocs.app` services. |
+```
 
+```
 ## AI usage declaration
 
 | AI tool and exact model | Date | Purpose | Files or answers it produced or changed | How you checked its output |
 | --- | --- | --- | --- | --- |
 | Google Gemini (Gemini 3) | 27 November 2026 | Explain `jdeps` architecture analysis concepts, troubleshoot Git repository structure, and draft report explanations for Parts A, B, and C | `LAB_REPORT.md` (drafted answers for Questions 1–8 and 11) | Ran `mvn package` and `jdeps` commands in Terminal to verify actual dependencies, compared Mermaid diagrams on mermaid.live against the package diagrams, and inspected the Java source files directly |
+```
