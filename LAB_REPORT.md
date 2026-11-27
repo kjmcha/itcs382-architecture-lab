@@ -31,10 +31,10 @@ Answer questions 1 and 2 in Question 1 of the quiz.
     Yes, the implemented architecture of ParcelPoint matches its intended architecture.
 
     When comparing the Mermaid flowchart generated from the jdeps output against the intended package diagram in both directions, all eight package dependencies align one-to-one:
-    * parcelpoint depends on cli, service, and storage.
-    * cli depends on service and domain.
-    * service depends on storage and domain.
-    * storage depends on domain.
+    - parcelpoint depends on cli, service, and storage.
+    - cli depends on service and domain.
+    - service depends on storage and domain.
+    - storage depends on domain.
     There are no missing dependencies from the design and no unauthorized extra dependencies (such as cli skipping directly to storage or cycles between packages) in the code.
 ```
 
