@@ -56,13 +56,14 @@ Answer questions 1 and 2 in Question 1 of the quiz.
 6. Identify the rule of the layered style that this change breaks, and explain what would happen to ParcelCommandLine if the team moved from H2 to a file store.
 
 ```text
-
+    - Rule broken: This change violates the strict layering (no layer-skipping) rule of the layered architectural style, which requires a layer (cli) to communicate only with the layer directly below it (service), rather than bypassing it to access the storage layer directly.
+    - Impact when moving to a file store: Because ParcelCommandLine is now tightly coupled to the concrete H2ParcelRepository class and its database path (./data/parcelpoint), switching to a file-based repository will require modifying ParcelCommandLine (the presentation layer) as well, or it will read from the wrong data source instead of the new file store.
 ```
 
 7. Explain why the class view of this step helps more than the package view of Step B1 when you have to fix the drift.
 
 ```text
-
+    In a large codebase, a single package can contain dozens of classes, so the package view (-verbose:package) only tells you which two packages have an unauthorized dependency (parcelpoint.cli -> parcelpoint.storage), without showing where it happens. The class view (-verbose:class) pinpoints the exact offending source class and the target class it references (parcelpoint.cli.ParcelCommandLine -> parcelpoint.storage.H2ParcelRepository), allowing you to open the right file immediately and fix the drift without manually searching through every file in the package.
 ```
 
 8. Explain why the cycle between domain and storage makes both packages harder to change, test and reuse. Use a term from cohesion, coupling and connascence in your answer.
@@ -82,18 +83,25 @@ Answer questions 1 and 2 in Question 1 of the quiz.
 10. Paste the jdeps output of Step C2 and your Mermaid flowchart.
 
 ```text
-
+    Introducing a cycle creates tight cyclic coupling (mutual dependency) between domain and storage, meaning neither package can stand independently without the other:
+    - Harder to change: Because of high coupling and connascence (specifically Connascence of Name and Type on ParcelRepository), changes to persistence interfaces or storage logic in storage can ripple back into core business entities in domain, and vice versa, forcing both packages to be modified and recompiled together.
+    - Harder to test: You cannot unit-test Parcel in isolation as a pure domain object anymore; every test involving Parcel must now bring in or mock ParcelRepository from the storage package.
+    - Harder to reuse: The domain package is no longer self-contained, so you cannot reuse Parcel in another application (such as a mobile client or a system using a different persistence mechanism) without also pulling in the storage package.
 ```
 
 11. List every difference and every cycle that you found, using the table below, and state for each one whether you would fix the design or the code, with one reason. If you found no difference, state that.
 
 ```text
-
+    No differences or cycles were found between the implemented code and the package diagram.
 ```
-
+| What you found | Where | What you would fix |
+| :--- | :--- | :--- |
+| An arrow in the code that the diagram does not show | `<packageA> -> <packageB>` (caused by `<ClassName>`) | **Fix the code** / **Fix the design**: <one clear reason> |
+| An arrow in the diagram that the code does not have | `<packageA> -> <packageB>` | **Fix the code** / **Fix the design**: <one clear reason> |
+| A cycle between packages | `<packageA> <-> <packageB>` | **Fix the code**: <how to break the cycle and one reason> |
 
 ## AI usage declaration
 
 | AI tool and exact model | Date | Purpose | Files or answers it produced or changed | How you checked its output |
 | --- | --- | --- | --- | --- |
-| Google Gemini | 14 November 2026 | Explain lab instructions, verify environment setup, review findAll() implementation, and draft report answers | H2ParcelRepository.java, LAB_REPORT.md | Compiled and ran the program with Maven and H2 Shell to verify outputs, rendered Mermaid diagrams on mermaid.live, and checked all explanations against the Java source code |
+| Google Gemini (Gemini 3) | 27 November 2026 | Explain `jdeps` architecture analysis concepts, troubleshoot Git repository structure, and draft report explanations for Parts A, B, and C | `LAB_REPORT.md` (drafted answers for Questions 1–8 and 11) | Ran `mvn package` and `jdeps` commands in Terminal to verify actual dependencies, compared Mermaid diagrams on mermaid.live against the package diagrams, and inspected the Java source files directly |
