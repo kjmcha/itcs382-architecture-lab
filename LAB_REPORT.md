@@ -130,9 +130,6 @@ flowchart TD
 
 11. List every difference and every cycle that you found, using the table below, and state for each one whether you would fix the design or the code, with one reason. If you found no difference, state that.
 
-```text
-    No differences or cycles were found between the implemented code and the package diagram.
-```
 | What you found | Where | What you would fix |
 | :--- | :--- | :--- |
 | An arrow in the code that the diagram does not show | `ocs.cli -> ocs.domain` | **Fix the design**: Add this dependency to the package diagram because CLI classes genuinely need to construct and display domain value types (such as `TargetCoordinates` and `InstrumentSettings`) when interacting with the user. |
