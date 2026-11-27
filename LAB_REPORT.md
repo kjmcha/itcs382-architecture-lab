@@ -1,5 +1,5 @@
 # Lab Report, Intended and Implemented Architecture
-Repository URL: 
+Repository URL: https://github.com/kjmcha/itcs382-architecture-lab.git
 
 ## Tools
 
