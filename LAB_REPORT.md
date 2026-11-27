@@ -69,13 +69,17 @@ Answer questions 1 and 2 in Question 1 of the quiz.
 8. Explain why the cycle between domain and storage makes both packages harder to change, test and reuse. Use a term from cohesion, coupling and connascence in your answer.
 
 ```text
-
+    Introducing a cycle creates tight cyclic coupling (mutual dependency) between domain and storage, meaning neither package can stand independently without the other:
+    - Harder to change: Because of high coupling and connascence (specifically Connascence of Name and Type on ParcelRepository), changes to persistence interfaces or storage logic in storage can ripple back into core business entities in domain, and vice versa, forcing both packages to be modified and recompiled together.
+    - Harder to test: You cannot unit-test Parcel in isolation as a pure domain object anymore; every test involving Parcel must now bring in or mock ParcelRepository from the storage package.
+    - Harder to reuse: The domain package is no longer self-contained, so you cannot reuse Parcel in another application (such as a mobile client or a system using a different persistence mechanism) without also pulling in the storage package.
 ```
 
 9. Both changes compiled and ran, although they broke the design. Explain why the compiler accepted them, and why a team therefore needs a separate check such as jdeps.
 
 ```text
-
+   - Why the compiler accepted them: The Java compiler (javac) only enforces language-level syntax, type safety, and access modifiers (such as public or package-private visibility). Because H2ParcelRepository and ParcelRepository are both declared public, javac treats calls to them as completely valid Java code; it has no knowledge of the team's architectural rules, layering boundaries, or dependency direction constraints.
+    - Why a team needs a separate check such as jdeps: Without an automated structural analysis tool like jdeps (ideally integrated into a CI pipeline or code review), architectural drift—such as layer-skipping shortcuts and cyclic dependencies—can silently enter the codebase without triggering any build errors, gradually eroding maintainability and modularity over time.
 ```
 
 ## Part C: Check your Phase 2 code
@@ -83,10 +87,45 @@ Answer questions 1 and 2 in Question 1 of the quiz.
 10. Paste the jdeps output of Step C2 and your Mermaid flowchart.
 
 ```text
-    Introducing a cycle creates tight cyclic coupling (mutual dependency) between domain and storage, meaning neither package can stand independently without the other:
-    - Harder to change: Because of high coupling and connascence (specifically Connascence of Name and Type on ParcelRepository), changes to persistence interfaces or storage logic in storage can ripple back into core business entities in domain, and vice versa, forcing both packages to be modified and recompiled together.
-    - Harder to test: You cannot unit-test Parcel in isolation as a pure domain object anymore; every test involving Parcel must now bring in or mock ParcelRepository from the storage package.
-    - Harder to reuse: The domain package is no longer self-contained, so you cannot reuse Parcel in another application (such as a mobile client or a system using a different persistence mechanism) without also pulling in the storage package.
+    **jdeps output:**
+```text
+classes -> target/classes
+   ocs.app                                            -> ocs.app                                            classes
+   ocs.app                                            -> ocs.domain                                         classes
+   ocs.app                                            -> ocs.port                                           classes
+   ocs.cli                                            -> ocs.app                                            classes
+   ocs.cli                                            -> ocs.cli                                            classes
+   ocs.cli                                            -> ocs.domain                                         classes
+   ocs.cli                                            -> ocs.persistence                                    classes
+   ocs.cli                                            -> ocs.port                                           classes
+   ocs.cli                                            -> ocs.simulation                                     classes
+   ocs.domain                                         -> ocs.domain                                         classes
+   ocs.domain                                         -> ocs.port                                           classes
+   ocs.persistence                                    -> ocs.domain                                         classes
+   ocs.persistence                                    -> ocs.persistence                                    classes
+   ocs.persistence                                    -> ocs.port                                           classes
+   ocs.port                                           -> ocs.domain                                         classes
+   ocs.simulation                                     -> ocs.domain                                         classes
+   ocs.simulation                                     -> ocs.port                                           classes
+```
+
+**Mermaid flowchart:**
+```mermaid
+flowchart TD
+    ocs.app --> ocs.domain
+    ocs.app --> ocs.port
+    ocs.cli --> ocs.app
+    ocs.cli --> ocs.domain
+    ocs.cli --> ocs.persistence
+    ocs.cli --> ocs.port
+    ocs.cli --> ocs.simulation
+    ocs.domain --> ocs.port
+    ocs.persistence --> ocs.domain
+    ocs.persistence --> ocs.port
+    ocs.port --> ocs.domain
+    ocs.simulation --> ocs.domain
+    ocs.simulation --> ocs.port
+```
 ```
 
 11. List every difference and every cycle that you found, using the table below, and state for each one whether you would fix the design or the code, with one reason. If you found no difference, state that.
@@ -96,9 +135,10 @@ Answer questions 1 and 2 in Question 1 of the quiz.
 ```
 | What you found | Where | What you would fix |
 | :--- | :--- | :--- |
-| An arrow in the code that the diagram does not show | `<packageA> -> <packageB>` (caused by `<ClassName>`) | **Fix the code** / **Fix the design**: <one clear reason> |
-| An arrow in the diagram that the code does not have | `<packageA> -> <packageB>` | **Fix the code** / **Fix the design**: <one clear reason> |
-| A cycle between packages | `<packageA> <-> <packageB>` | **Fix the code**: <how to break the cycle and one reason> |
+| An arrow in the code that the diagram does not show | `ocs.cli -> ocs.domain` | **Fix the design**: Add this dependency to the package diagram because CLI classes genuinely need to construct and display domain value types (such as `TargetCoordinates` and `InstrumentSettings`) when interacting with the user. |
+| An arrow in the code that the diagram does not show | `ocs.cli -> ocs.port` | **Fix the design**: Add this dependency to the package diagram because `OcsMain` (the composition root in `ocs.cli`) wires concrete implementations to port interfaces when injecting dependencies into application services. |
+| An arrow in the code that the diagram does not show | `ocs.domain -> ocs.port` | **Fix the code**: Remove the dependency on `ocs.port` from `ocs.domain` so that domain entities remain pure and independent of external port interfaces, which also resolves the package cycle. |
+| A cycle between packages | `ocs.domain <-> ocs.port` | **Fix the code**: Break the cycle by keeping `ocs.port -> ocs.domain` (so port interfaces can use domain types in their signatures) and moving any port calls out of `ocs.domain` into `ocs.app` services. |
 
 ## AI usage declaration
 
